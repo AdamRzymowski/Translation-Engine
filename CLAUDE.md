@@ -43,6 +43,13 @@ no matter which batch they came from.
   in place, so keeping the original PDF layout will be harder than in Python. Plan output
   around rebuilding pages from the translated text unless a better library is found.
 
+## Interface
+
+- A **command-line tool** run with Node.js: the user points it at a folder of PDFs and it
+  writes the translated files to an output folder, updating `Glossary.csv` as it goes.
+- A web interface may be added later on top of the same core code, so keep the translation
+  logic separate from the command-line handling.
+
 ## Translation backend
 
 - Translation is done with the **Claude API**, using the official Anthropic TypeScript SDK
@@ -56,6 +63,5 @@ no matter which batch they came from.
 
 ## Open decisions
 
-- Interface (e.g. command-line tool or web app).
 - Output format: PDFs that keep the original layout, or translated text/Word files.
 - Whether to support more than one target language (one glossary column per language).
