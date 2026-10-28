@@ -28,9 +28,19 @@ no matter which batch they came from.
 - It is one combined glossary shared across all batches; never create a separate glossary per batch.
 - Existing entries are not changed automatically; the user decides when a translation changes.
 
+## Translation backend
+
+- Translation is done with the **Claude API**, using the official Anthropic SDK (no raw HTTP
+  calls unless the project has no supported SDK).
+- Default model: `claude-opus-5-5`.
+- The glossary is sent with every request as the source of truth for terms, placed before the
+  document text so it can be prompt-cached across files in a batch.
+- New terms the model finds are returned as structured output (term + proposed translation)
+  so they can be added to `Glossary.csv`, rather than parsed out of free text.
+- Never hard-code an API key; read it from the environment (`ANTHROPIC_API_KEY`).
+
 ## Open decisions
 
-- Translation backend (e.g. Claude API, DeepL).
 - Implementation language and interface (e.g. Python CLI or web app).
 - Output format: PDFs that keep the original layout, or translated text/Word files.
 - Whether to support more than one target language (one glossary column per language).
