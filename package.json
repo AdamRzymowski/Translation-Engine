@@ -1,0 +1,35 @@
+{
+  "name": "translation-engine",
+  "version": "1.0.0",
+  "scripts": {
+    "translate": "tsx src/cli.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AdamRzymowski/Translation-Engine.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AdamRzymowski/Translation-Engine/issues"
+  },
+  "homepage": "https://github.com/AdamRzymowski/Translation-Engine#readme",
+  "description": "Translate batches of PDFs from English using one shared glossary",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
+    "csv-parse": "^7.0.3",
+    "csv-stringify": "^6.9.0",
+    "pdf-lib": "^1.17.1",
+    "pdfmake": "^0.2.23",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/pdfmake": "^0.2.13",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "type": "module"
+}

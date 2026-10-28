@@ -69,7 +69,35 @@ no matter which batch they came from.
   the original.
 - Output PDFs must embed a font that supports Polish characters.
 - Output files keep the source file name with the target language added
-  (e.g. `rules.pdf` → `rules.Polish.pdf`).
+  (e.g. `Baseline/rules.pdf` → `Target/rules.Polish.pdf`).
+
+## Folders
+
+- `Baseline/` — the source PDFs to translate. The user adds new baseline files here.
+- `Target/` — the translated PDFs the tool produces. `Target/.work/` keeps each translated
+  chunk as JSON so an interrupted run resumes without paying for the same pages again.
+- PDFs in both folders are git-ignored; only the folders themselves are tracked.
+
+## Running
+
+```bash
+npx tsx src/cli.ts                       # translate every PDF in Baseline/
+npx tsx src/cli.ts some.pdf --pages 1-6  # cheap test on a few pages
+npm run typecheck
+```
+
+Needs `ANTHROPIC_API_KEY` set. Use `npx tsx src/cli.ts` rather than `npm run translate -- ...`
+when passing options, because PowerShell swallows the `--`.
+
+## Code layout
+
+- `src/config.ts` — all settings (languages, folders, model, pages per request).
+- `src/cli.ts` — command-line handling only.
+- `src/glossary.ts` — loads, extends and saves `Glossary.csv` (UTF-8 with BOM for Excel).
+- `src/pdf.ts` — splits a source PDF into page chunks with pdf-lib.
+- `src/translate.ts` — one Claude request per chunk: PDF pages in, translated blocks and new
+  glossary terms out (structured JSON output, server-side refusal fallback enabled).
+- `src/render.ts` — builds the output PDF from translated blocks with pdfmake (Roboto font).
 
 ## Open decisions
 
