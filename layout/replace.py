@@ -89,6 +89,9 @@ def free_box(unit, others, right_margin, page_rect, centred, rules=()):
     if unit["align"] == "right":
         # Right-aligned labels such as "50 pts" may grow to the left.
         x0 -= 30
+    if len(unit["text"]) <= 4:
+        # Short numbers (page numbers, values) get a little slack instead of being shrunk.
+        x0, x1 = x0 - 3, x1 + 3
     own_right = max(line[2] for line in unit["lines"])
     for o in others:
         ox0, oy0, ox1, oy1 = o["box"]
@@ -99,6 +102,9 @@ def free_box(unit, others, right_margin, page_rect, centred, rules=()):
         if (beside or next_column) and ox0 < x1:
             x1 = min(x1, ox0 - 4)
     below = [o["box"][1] for o in list(others) + list(rules) if overlaps(x0, x1, o["box"][0], o["box"][2]) and o["box"][1] >= y0 + unit["size"]]
+    # Never grow below the lowest body text on the page (into the decorated footer band).
+    if not footer:
+        below.append(max([o["box"][3] for o in body] + [y1]) + 0.3 * unit["size"])
     # Keep a small gap above the next text: the last line's descenders reach below its box.
     bottom = min(below + [y1 + 4 * unit["size"]]) - 0.3 * unit["size"]
     # Footers, large titles and short labels (e.g. table cells) stay on one line: they shrink
@@ -185,7 +191,9 @@ def replace(src, units_path, translations_path, out):
         # Stencil text takes its colour from the fill behind it, and removing that fill also hides
         # stencil text we did not translate (e.g. page numbers), so all of it is rewritten.
         if any(u.get("stencil") for u in todo):
-            fills = [d["fill"] for d in page.get_drawings() if d.get("fill") and "f" in d["type"]]
+            drawings = [d for d in page.get_drawings() if d.get("fill") and "f" in d["type"]]
+            # The fill a stencil cuts is drawn far larger than the page; icons and art are not.
+            fills = [d["fill"] for d in drawings if d["rect"].width > page.rect.width] or [d["fill"] for d in drawings]
             colour = max(set(fills), key=fills.count) if fills else (0, 0, 0)
             hexcolour = "#" + "".join(f"{round(c * 255):02x}" for c in colour)
             for u in page_units:
@@ -225,24 +233,12 @@ def replace(src, units_path, translations_path, out):
         # into the unit before it (one paragraph split across text blocks): its text is removed
         # above, and its area is given to that previous unit.
         merged = {u["id"] for u in todo if translations[u["id"]].strip() == "-"}
-        for i, u in enumerate(todo):
-            if u["id"] in merged:
-                continue
-            u = dict(u)
-            indent = 0
-            for nxt in todo[i + 1:]:
-                if nxt["id"] not in merged:
-                    break
-                # The first line may start further right (an indent, or room for a drop cap).
-                indent = max(indent, u["box"][0] - nxt["box"][0])
-                u["box"] = [min(u["box"][0], nxt["box"][0]), u["box"][1], max(u["box"][2], nxt["box"][2]), max(u["box"][3], nxt["box"][3])]
-                u["lines"] = u["lines"] + nxt["lines"]
-                if len(u["lines"]) >= 3:
-                    u["align"] = "justify"
-            others = [o for o in page_units if o["id"] != u["id"] and o["id"] not in merged]
+
+        def write(u, text, indent=0):
+            """Writes one block of translated text into the area of unit `u`."""
+            others = [o for o in page_units if o["id"] not in u["ids"] and o["id"] not in merged]
             centred = is_centred(u, page.rect.width, others)
             rect = free_box(u, others, right_margin, page.rect, centred, rules)
-            text = translations[u["id"]]
             cap = drop_cap_for(u, others)
             if cap:
                 # The lines beside a drop cap are narrower: fill them first, in their own box.
@@ -252,12 +248,50 @@ def replace(src, units_path, translations_path, out):
                 page.insert_htmlbox(beside, unit_html(dict(u, align="justify"), head, False), css=CSS, archive=archive, scale_low=0.9)
                 rect.y0 = cap["box"][3] + 0.5 * u["size"] * 0.18
                 indent = 0
-            spare, scale = page.insert_htmlbox(
-                rect, unit_html(u, text, centred, indent), css=CSS, archive=archive, scale_low=0.6
-            )
+            html_text = unit_html(u, text, centred, indent)
+            spare, scale = page.insert_htmlbox(rect, html_text, css=CSS, archive=archive, scale_low=0.6)
+            if spare < 0:
+                # Last resort: smaller text rather than missing text.
+                spare, scale = page.insert_htmlbox(rect, html_text, css=CSS, archive=archive, scale_low=0.35)
             if spare < 0 or scale < 0.9:
                 report.append(f"  {u['id']}: {'did not fit' if spare < 0 else f'shrunk to {scale:.0%}'} - {u['text'][:50]}")
 
+        for i, u in enumerate(todo):
+            if u["id"] in merged:
+                continue
+            # A paragraph may continue in later units ("-"); those in the same column are joined into
+            # one area, and a jump to another column starts a new area the text flows into.
+            areas = [dict(u, ids={u["id"]})]
+            indent = 0
+            for nxt in todo[i + 1:]:
+                if nxt["id"] not in merged:
+                    break
+                area = areas[-1]
+                if nxt["box"][0] > area["box"][2] - 5 or nxt["box"][1] < area["box"][1]:
+                    areas.append(dict(nxt, ids={nxt["id"]}, align="justify"))
+                    continue
+                if len(areas) == 1:
+                    # The first line may start further right (an indent, or room for a drop cap).
+                    indent = max(indent, area["box"][0] - nxt["box"][0])
+                area["box"] = [min(area["box"][0], nxt["box"][0]), area["box"][1], max(area["box"][2], nxt["box"][2]), max(area["box"][3], nxt["box"][3])]
+                area["lines"] = area["lines"] + nxt["lines"]
+                area["ids"].add(nxt["id"])
+                if len(area["lines"]) >= 3:
+                    area["align"] = "justify"
+            text = translations[u["id"]]
+            capacity = [(a["box"][2] - a["box"][0]) * (a["box"][3] - a["box"][1]) for a in areas]
+            total_chars = len(re.sub(r"<[^>]+>", "", text))
+            for n, area in enumerate(areas):
+                if n < len(areas) - 1:
+                    share = int(total_chars * capacity[n] / sum(capacity))
+                    part, text = split_html(text, share)
+                else:
+                    part = text
+                write(area, part, indent if n == 0 else 0)
+
+    # Trailing pages without any text (e.g. a back cover) belong to the book too.
+    if not any(page.get_text().strip() for page in doc.pages(last, len(doc))):
+        last = len(doc)
     doc.select(list(range(first - 1, last)))
     doc.save(out, garbage=3, deflate=True)
     print(f"wrote {out} ({len(units)} units, pages {first}-{last})")

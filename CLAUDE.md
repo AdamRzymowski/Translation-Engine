@@ -127,19 +127,36 @@ fails because the folder path is too long for Windows). It replaces the pdfmake 
 1. `python layout/extract.py <src.pdf> <first> <last> <units.json>` — splits the pages into
    translation units (paragraphs, list items, headings, labels) with line boxes, font, size,
    colour, alignment and the text as HTML (`<b>`, `<i>`, `<sup>`).
-2. Translate: write `<translations.json>` mapping unit id → Polish HTML with the same tags.
-   Units left out stay untouched (page numbers, version labels). `"-"` merges a unit into the
-   one before it (one paragraph split across text blocks). Done in a Claude Code session.
-3. `python layout/replace.py <src.pdf> <units.json> <translations.json> <out.pdf>` — removes
-   only the translated text (images, artwork and line art kept, nothing painted over), writes
-   the Polish into the same place, using free space right/below, else shrinking; reports units
-   it had to shrink. Handles "stencil" text (invisible text clipping a coloured fill, used for
-   the purple contents entries) and restores links removed with the text.
+2. Translate: write translation files (`Target/.work/layout/ac-pNN-MM.pl.json`, a few pages
+   each) mapping unit id → Polish HTML with the same tags. Units left out stay untouched (page
+   numbers, values like "+1 AP"). `"-"` merges a unit into the one before it (one paragraph
+   split across text blocks or columns — the text then flows across those areas). For drop
+   caps, start the Polish with the same letter as the drop cap and leave the cap unit out.
+   Done in a Claude Code session, following `Glossary.csv`.
+3. `python layout/merge.py <units.json> layout/phrasebook.pl.json <all.pl.json> <files...>` —
+   combines the files and fills repeated labels ("Type", "One Turn", footers) from the phrasebook.
+4. `python layout/replace.py <src.pdf> <units.json> <all.pl.json> <out.pdf>` — removes only the
+   translated text (images, artwork and line art kept, nothing painted over), writes the Polish
+   into the same place (its column, stopping at separator lines and the footer band), shrinking
+   only when needed; reports units that did not fit. Handles "stencil" text (invisible text
+   clipping a coloured fill, used for the purple contents entries), drop caps, text flowing
+   between columns, and restores links removed with the text.
+5. If extract.py changes and unit ids shift: `python layout/remap.py <old.json> <new.json> <files...>`.
+
+Check the result by rendering pages to PNG and comparing with the original; also compare image
+hashes per page (`page.get_image_info(hashes=True)`) — they must be identical.
 
 Fonts: Caladea (the book's body font) is installed on this PC; Cinzel (headings) and Caslon
 (cover) are not, so Book Antiqua stands in — installing Cinzel/Caslon would match exactly.
 Windows paths over 260 characters fail, so keep output file names short (e.g. `Target/AC_p1-6.Polish.pdf`).
 Work files live in `Target/.work/layout/`.
+
+## Progress
+
+- Arcane Compendium (35 pages): fully translated → `Target/AC.Polish.pdf`
+  (translation files in `Target/.work/layout/`). New terms were added to `Glossary.csv` as
+  "Added by translator" for the user to review.
+- Still to do: the Rulebook (75 pages) and Supplement 2 (108 pages) in `Baseline/`.
 
 ## Open decisions
 
