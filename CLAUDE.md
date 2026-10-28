@@ -21,6 +21,14 @@ no matter which batch they came from.
 5. **Repeat with new batches.** The glossary grows over time and carries forward, so all PDFs
    ever processed share the same terminology.
 
+## Target language
+
+- Set by `TARGET_LANGUAGE` in `src/config.ts` — currently **Polish**. Never hard-code the
+  language anywhere else; always read it from this setting.
+- Polish needs fonts with Polish characters (ą, ć, ę, ł, ń, ó, ś, ź, ż) in the output PDFs.
+- Polish words change endings by grammatical case. The glossary holds the base form of each
+  term; translations should inflect it correctly for the sentence while keeping the same term.
+
 ## Glossary
 
 - Stored in `Glossary.csv` at the repository root.
