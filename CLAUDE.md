@@ -32,7 +32,14 @@ no matter which batch they came from.
 ## Glossary
 
 - Stored in `Glossary.csv` at the repository root.
-- Columns: `English,Translation` — one term per row.
+- Columns: `English,Translation,Category,Notes` — one term per row. Only English and
+  Translation are sent to Claude; Category and Notes are for the user's review.
+- Notes markers: `CHOOSE` (source gave alternatives; the first is used until the user picks),
+  `CHECK` (typo fixed, split or inferred English), `CLASH` (wording overlaps another term).
+- Terms Claude adds during translation get the category `Added by translator`.
+- Source glossary lists from the user may have section headings written Polish-first
+  ("Polish (English)") while the terms are English-first ("English – Polish"); the headings
+  become the Category column, not glossary entries.
 - It is one combined glossary shared across all batches; never create a separate glossary per batch.
 - Existing entries are not changed automatically; the user decides when a translation changes.
 

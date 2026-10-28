@@ -1,1 +1,141 @@
-English,Translation
+﻿English,Translation,Category,Notes
+Active Player,Aktywny Gracz,Game Phases & Turns,"CHECK: source had ""Aktywny Graczy"" - corrected to Gracz. Split from ""Active Player / Reactive Player"""
+Reactive Player,Reaktywny Gracz,Game Phases & Turns,"Split from ""Active Player / Reactive Player"""
+Battle Preparations,Przygotowania do bitwy,Game Phases & Turns,
+Game Turns,Tury gry,Game Phases & Turns,
+Charge Phase,Faza szarży,Game Phases & Turns,
+Movement Phase,Faza ruchu,Game Phases & Turns,
+Magic Phase,Faza magii,Game Phases & Turns,
+Shooting Phase,Faza strzelania,Game Phases & Turns,
+Rally Phase,Faza formowania,Game Phases & Turns,"CHOOSE: alternative ""Faza zbierania"". CLASH: ""formowania"" is also used for Reform Move"
+Melee Phase,Faza zwarcia,Game Phases & Turns,"CHOOSE: alternative ""Faza walki wręcz"""
+After the Game,Po bitwie,Game Phases & Turns,"CHOOSE: alternative ""Po grze"""
+Round of Combat,Runda walki wręcz,Game Phases & Turns,
+Move Manoeuvres,Manewry ruchu,Movement & Manoeuvre Terms,
+Advance Move,Ruch marszowy,Movement & Manoeuvre Terms,"CHOOSE: alternative ""Ruch naprzód"". CLASH: ""marszowy"" sounds like March Move"
+March Move,Szybki marsz,Movement & Manoeuvre Terms,"CHOOSE: alternative ""Bieg"""
+Reform Move,Manewr formowania,Movement & Manoeuvre Terms,"CHOOSE: alternative ""Przegrupowanie"". CLASH: Combat Reforms uses ""Przegrupowania"""
+Pivot,Obrót w miejscu,Movement & Manoeuvre Terms,"CHOOSE: alternative ""Zwrot"". CLASH: Post-Combat Pivots uses ""Zwroty"""
+Snaking Forward Move,Ruch wężykowy,Movement & Manoeuvre Terms,"CHOOSE: alternative ""Zmienna linia ruchu"""
+Valid Final Position,Prawidłowa pozycja końcowa,Movement & Manoeuvre Terms,
+Magical Move,Ruch magiczny,Movement & Manoeuvre Terms,
+Charge Move,Ruch szarży,Charge & Combat Actions,
+Declaring Charges,Deklarowanie szarż,Charge & Combat Actions,
+Charge Range,Zasięg szarży,Charge & Combat Actions,
+Charge Reactions,Reakcje na szarżę,Charge & Combat Actions,
+Hold!,Stać!,Charge & Combat Actions,"CHOOSE: alternative ""Wytrzymaj!"""
+Flee!,Ucieczka!,Charge & Combat Actions,"CHOOSE: alternative ""Uciekaj!"" (an order like Hold!)"
+Charge Redirections,Przekierowanie szarży,Charge & Combat Actions,
+Unaligned Charges,Niewyrównane szarże,Charge & Combat Actions,
+Combined Charges,Szarże połączone,Charge & Combat Actions,
+Blocked Path,Zablokowana ścieżka,Charge & Combat Actions,
+Failed Charge Move,Nieudany ruch szarży,Charge & Combat Actions,
+Engaged in Combat,Związani walką,Charge & Combat Actions,
+Stand and Shoot,Postaw i strzelaj,Charge & Combat Actions,"CHOOSE: alternative ""Ognia w miejscu"""
+Combat Set-Up,Przygotowanie do walki,Charge & Combat Actions,
+Static Combat Score,Statyczny wynik walki,Charge & Combat Actions,
+Casualty-based Combat Score,Wynik walki oparty na stratach,Charge & Combat Actions,
+Final Combat Score,Ostateczny wynik walki,Charge & Combat Actions,
+Break Tests,Testy złamania,Charge & Combat Actions,"Source adds ""(morale)"" as a clarification; left out so it is not repeated in the text"
+Fleeing and Pursuing,Ucieczka i pościg,Charge & Combat Actions,
+Overrun,Rozpęd,Charge & Combat Actions,"CHOOSE: alternative ""Przełamanie i pościg"""
+Combat Reforms,Przegrupowania w walce,Charge & Combat Actions,
+Post-Combat Pivots,Zwroty po walce,Charge & Combat Actions,
+Make Way,Ustąp miejsca,Charge & Combat Actions,
+Flux Cards,Karty strumienia magii,Magic & Spellcasting Terms,
+Magic Dice,Kości magii,Magic & Spellcasting Terms,
+Siphon the Veil,Wysysanie Zasłony,Magic & Spellcasting Terms,
+Storing Magic,Magazynowanie magii,Magic & Spellcasting Terms,
+Excess Magic,Nadmiar magii,Magic & Spellcasting Terms,
+Learned Spells,Zaklęcia wyuczone,Magic & Spellcasting Terms,
+Bound Spells,Zaklęcia wrodzone,Magic & Spellcasting Terms,"CHOOSE: alternative ""Zaklęcia skrępowane"""
+Hereditary Spell,Zaklęcie dziedziczne,Magic & Spellcasting Terms,
+Casting Roll,Rzut na rzucenie zaklęcia,Magic & Spellcasting Terms,
+Casting Value,Poziom trudności zaklęcia,Magic & Spellcasting Terms,"CHOOSE: alternative ""Wartość rzutu"""
+Fizzle,Spupczenie,Magic & Spellcasting Terms,"CHECK: ""Spupczenie"" looks like a typo. CHOOSE: alternative ""Niepowodzenie"""
+Miscast,Katastrofa magiczna,Magic & Spellcasting Terms,"CHOOSE: alternative ""Nieudane rzucenie"""
+Dispelling Roll,Rzut na rozproszenie,Magic & Spellcasting Terms,
+Path of Magic,Ścieżka magii,Magic & Spellcasting Terms,
+Wizard Apprentice,Uczeń Magii,Magic & Spellcasting Terms,"CHECK: split from ""Wizard Apprentice / Adept / Master - Uczeń / Adept / Mistrz Magii""; ""Magii"" applied to each"
+Wizard Adept,Adept Magii,Magic & Spellcasting Terms,CHECK: split from the Wizard Apprentice / Adept / Master line
+Wizard Master,Mistrz Magii,Magic & Spellcasting Terms,Split from the Wizard Apprentice / Adept / Master line
+Wizard Conclave (X),Konklawe Magów (X),Magic & Spellcasting Terms,
+Shooting Attack,Atak strzelecki,Shooting & Attack Terminology,
+Ranged Attacks,Ataki dystansowe,Shooting & Attack Terminology,
+Melee Attacks,Ataki wręcz,Shooting & Attack Terminology,
+Standard Melee Attacks,Standardowe ataki wręcz,Shooting & Attack Terminology,
+Attack Sequence,Sekwencja ataku,Shooting & Attack Terminology,
+To-Hit Roll,Rzut na trafienie,Shooting & Attack Terminology,
+To-Wound Roll,Rzut na zranienie,Shooting & Attack Terminology,
+Armour Saves,Rzuty na pancerz,Shooting & Attack Terminology,
+Special Saves,Rzuty specjalne,Shooting & Attack Terminology,
+Aegis,Egida,Shooting & Attack Terminology,
+Regeneration,Regeneracja,Shooting & Attack Terminology,
+Health Pools,Pule punktów życia,Shooting & Attack Terminology,
+Health Points (HP),Punkty życia (HP),Shooting & Attack Terminology,Listed twice in the source (also under Characteristic Profiles & Metrics) with the same translation
+Command Tests,Testy dowodzenia,Psychology & Mental States,
+Courage Tests,Testy odwagi,Psychology & Mental States,
+Panic Tests,Testy paniki,Psychology & Mental States,
+Decimated,Przerzedzony,Psychology & Mental States,"CHOOSE: alternative ""Dziesiątkowany"""
+Shaken,Wstrząśnięty,Psychology & Mental States,"CHOOSE: alternative ""Rozbity psychicznie"""
+Flee Move,Ruch ucieczki,Psychology & Mental States,
+Broken,Złamany,Psychology & Mental States,"Source adds ""(morale)"" as a clarification; left out so it is not repeated in the text"
+Model,Model,Unit Formation & Structural Terms,
+Rank-and-File Model,Zwykły model,Unit Formation & Structural Terms,"CHOOSE: alternative ""Model szeregowy"""
+Base,Podstawka,Unit Formation & Structural Terms,
+Unit,Jednostka,Unit Formation & Structural Terms,
+Unit Boundary,Obrys jednostki,Unit Formation & Structural Terms,
+Unit's Centre,Środek jednostki,Unit Formation & Structural Terms,
+Facings,Strony,Unit Formation & Structural Terms,"CHOOSE: alternative ""Sektory"""
+Front Facing,Przód,Unit Formation & Structural Terms,"CHECK: English inferred from ""Facings - Strony / Sektory (Przód, Tył, Flanki)"""
+Rear Facing,Tył,Unit Formation & Structural Terms,CHECK: English inferred from the Facings line
+Flank Facing,Flanka,Unit Formation & Structural Terms,"CHECK: English inferred from the Facings line; source gives the plural ""Flanki"""
+Arcs,Łuki,Unit Formation & Structural Terms,
+Front Arc,Łuk przedni,Unit Formation & Structural Terms,"CHECK: inferred from ""Arcs - Łuki (Przedni, Tylny, Flankowe)"""
+Rear Arc,Łuk tylny,Unit Formation & Structural Terms,CHECK: inferred from the Arcs line
+Flank Arc,Łuk flankowy,Unit Formation & Structural Terms,"CHECK: inferred from the Arcs line; source gives the plural ""Flankowe"""
+Proper Ranks,Pełne szeregi,Unit Formation & Structural Terms,
+Ranks and Files,Szeregi i kolumny,Unit Formation & Structural Terms,
+Model Parts,Części modelu,Unit Formation & Structural Terms,
+Unit Spacing,Odstępy między jednostkami,Unit Formation & Structural Terms,
+Uncontrolled Moves,Ruchy niekontrolowane,Unit Formation & Structural Terms,
+Combined Units,Jednostki połączone,Unit Formation & Structural Terms,
+Attachable Models,Modele dołączane,Unit Formation & Structural Terms,
+Matching and Mismatching Bases,Pasujące i niepasujące podstawki,Unit Formation & Structural Terms,
+Scoring Units,Jednostki punktujące,Unit Formation & Structural Terms,
+Steady,Stabilny,Unit Formation & Structural Terms,"Split from ""Steady / Solid / Steadfast / Surrounded"""
+Solid,Zwarty,Unit Formation & Structural Terms,"Split from ""Steady / Solid / Steadfast / Surrounded"""
+Steadfast,Niezłomny,Unit Formation & Structural Terms,"Split from ""Steady / Solid / Steadfast / Surrounded"""
+Surrounded,Okrążony,Unit Formation & Structural Terms,"Split from ""Steady / Solid / Steadfast / Surrounded"""
+Global Characteristics,Cechy globalne,Characteristic Profiles & Metrics,
+Charge Speed (Cha),Szybkość szarży (Cha),Characteristic Profiles & Metrics,
+Mobility (Mob),Mobilność (Mob),Characteristic Profiles & Metrics,
+Discipline (Dis),Dyscyplina (Dis),Characteristic Profiles & Metrics,
+Defensive Characteristics,Cechy obronne,Characteristic Profiles & Metrics,
+Defensive Skill (Def),Zdolność obronna (Def),Characteristic Profiles & Metrics,
+Resilience (Res),Odporność (Res),Characteristic Profiles & Metrics,
+Armour (Arm),Pancerz (Arm),Characteristic Profiles & Metrics,
+Offensive Characteristics,Cechy ofensywne,Characteristic Profiles & Metrics,
+Agility (Agi),Inicjatywa (Agi),Characteristic Profiles & Metrics,"CHOOSE: alternative ""Zwinność (Agi)"" (the literal meaning of Agility)"
+Attack Value (Att),Liczba ataku (Att),Characteristic Profiles & Metrics,"CHOOSE: alternative ""Ataki (Att)"""
+Offensive Skill (Off),Zdolność ofensywna (Off),Characteristic Profiles & Metrics,
+Strength (Str),Siła (Str),Characteristic Profiles & Metrics,
+Armour Penetration (AP),Przebicie pancerza (AP),Characteristic Profiles & Metrics,
+Model Height,Wysokość modelu,Characteristic Profiles & Metrics,
+Line of Sight (LoS),Linia wzroku (LoS),Characteristic Profiles & Metrics,"Source English had no ""(LoS)""; added to match the Polish"
+Army Size,Wielkość armii,Mission & Game Setup Terms,"Source adds ""(punktacja)"" as a clarification; left out so it is not repeated in the text"
+Army List,Lista armii,Mission & Game Setup Terms,
+Points Cost (pts),Koszt punktowy (pkt),Mission & Game Setup Terms,
+Army Categories,Kategorie armii,Mission & Game Setup Terms,"Source lists the categories: Postacie, Podstawowe, Specjalne, Unikalne dla armii"
+Characters,Postacie,Mission & Game Setup Terms,CHECK: English inferred from the Army Categories line
+Core,Podstawowe,Mission & Game Setup Terms,CHECK: English inferred from the Army Categories line
+Special,Specjalne,Mission & Game Setup Terms,CHECK: English inferred from the Army Categories line
+Army-Specific,Unikalne dla armii,Mission & Game Setup Terms,CHECK: English inferred from the Army Categories line
+Deployment Type,Rodzaj rozstawienia,Mission & Game Setup Terms,
+Deployment Zones,Strefy rozstawienia,Mission & Game Setup Terms,
+Attacker,Atakujący,Mission & Game Setup Terms,"Split from ""Attacker and Defender - Atakujący i Obrońca"""
+Defender,Obrońca,Mission & Game Setup Terms,"Split from ""Attacker and Defender - Atakujący i Obrońca"""
+Primary Objective,Cel główny,Mission & Game Setup Terms,
+Secondary Objectives,Cele poboczne,Mission & Game Setup Terms,
+Victory Points (VP),Punkty zwycięstwa (VP),Mission & Game Setup Terms,
+Battle Points (BP),Punkty bitewne (BP),Mission & Game Setup Terms,
