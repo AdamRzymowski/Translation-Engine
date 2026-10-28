@@ -62,8 +62,12 @@ no matter which batch they came from.
 
 - Translation is done with the **Claude API**, using the official Anthropic TypeScript SDK
   (`@anthropic-ai/sdk`); no raw HTTP calls.
-- Model: `claude-sonnet-5-5` (chosen by the user to halve API cost; set in `src/config.ts`).
-  API usage is billed separately from the user's Claude subscription.
+- Model: `claude-sonnet-5-5` (set in `src/config.ts`).
+- **<u>No extra cost: translations must use the user's existing Claude plan allowance.</u>**
+  The user does not want to pay for Anthropic API usage, which is billed separately from the
+  plan. Do not run anything that calls the API (the current `src/translate.ts` does) and do
+  not ask the user to create an API key. Translate through Claude Code instead, either
+  directly in a session or by having the tool call Claude Code, which signs in with the plan.
 - The glossary is sent with every request as the source of truth for terms, placed before the
   document text so it can be prompt-cached across files in a batch.
 - New terms the model finds are returned as structured output (term + proposed translation)
