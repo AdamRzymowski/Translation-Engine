@@ -55,50 +55,115 @@ def overlaps(a0, a1, b0, b1):
     return min(a1, b1) - max(a0, b0) > 0.3 * min(a1 - a0, b1 - b0)
 
 
-def free_box(unit, others, right_margin, page_rect, centred):
-    """The area this unit's translation may use without running into other text."""
+def rule_lines(page):
+    """Thin horizontal lines drawn on the page (e.g. separators on spell cards), as pseudo-units
+    so translated text stops above them instead of running across."""
+    rules = []
+    for d in page.get_drawings():
+        r = d["rect"]
+        if r.height < 2.5 and 30 < r.width < page.rect.width:
+            rules.append({"id": "rule", "box": [r.x0, r.y0, r.x1, r.y1], "text": "", "size": 0})
+    return rules
+
+
+def free_box(unit, others, right_margin, page_rect, centred, rules=()):
+    """The area this unit's translation may use without running into other text.
+
+    Text may widen to the right edge of its own column (the widest text above or below it that
+    shares its horizontal span), but never into a neighbouring column or a label on the same line.
+    """
     x0, y0, x1, y1 = unit["box"]
     footer = y0 > page_rect.height * 0.92
-    body = [o for o in others if o["box"][1] <= page_rect.height * 0.92]
+    body = [o for o in others if (o["box"][1] > page_rect.height * 0.92) == footer]
     if centred:
         # Centred titles may widen equally on both sides, up to the page margins.
         margin = page_rect.width - right_margin
         x0, x1 = min(x0, margin), max(x1, right_margin)
-    elif not footer and not any(o["box"][0] > x1 and o["box"][1] < y1 + 150 and o["box"][3] > y0 - 150 for o in body):
-        # No column runs alongside this text, so it may extend to the page's right margin.
-        x1 = max(x1, right_margin)
+    elif not footer:
+        # Its column: nearby text starting at (about) the same left edge.
+        column = [o["box"][2] for o in body if abs(o["box"][0] - x0) < 25 and abs(o["box"][1] - y0) < 120]
+        x1 = max([x1] + column)
+        if len(unit["lines"]) == 1 and unit["align"] != "right":
+            # A single line (label, name, heading) may run on until the next text on its row.
+            x1 = max(x1, right_margin)
     if unit["align"] == "right":
         # Right-aligned labels such as "50 pts" may grow to the left.
         x0 -= 30
+    own_right = max(line[2] for line in unit["lines"])
     for o in others:
         ox0, oy0, ox1, oy1 = o["box"]
-        # Text to the right on the same lines limits the width.
-        if overlaps(y0, y1, oy0, oy1) and ox0 > x0 + 5:
+        # Text to the right on the same lines limits the width, and so does text in a column
+        # further right on the lines the translation may grow into.
+        beside = overlaps(y0, y1, oy0, oy1) and ox0 > x0 + 5
+        next_column = overlaps(y0, y1 + 2 * unit["size"], oy0, oy1) and ox0 >= own_right + 5
+        if (beside or next_column) and ox0 < x1:
             x1 = min(x1, ox0 - 4)
-    below = [o["box"][1] for o in others if overlaps(x0, x1, o["box"][0], o["box"][2]) and o["box"][1] >= y1 - 1]
-    bottom = min(below + [y1 + 4 * unit["size"]]) - 1
-    # Footers and large single-line titles stay on one line; they shrink instead of wrapping.
-    if len(unit["lines"]) == 1 and (footer or unit["size"] >= 14):
+    below = [o["box"][1] for o in list(others) + list(rules) if overlaps(x0, x1, o["box"][0], o["box"][2]) and o["box"][1] >= y0 + unit["size"]]
+    # Keep a small gap above the next text: the last line's descenders reach below its box.
+    bottom = min(below + [y1 + 4 * unit["size"]]) - 0.3 * unit["size"]
+    # Footers, large titles and short labels (e.g. table cells) stay on one line: they shrink
+    # instead of wrapping, as wrapping would break the table or banner they sit in.
+    if len(unit["lines"]) == 1 and (footer or unit["size"] >= 14 or len(unit["text"]) <= 20):
         bottom = y1 + 1.5
     return pymupdf.Rect(x0, y0 - 0.5, x1, max(y1 + 1.5, bottom))
 
 
-def is_centred(unit, page_width):
-    """A single line placed in the middle of the page, like a title."""
+def is_centred(unit, page_width, others=()):
+    """A single line in the middle of the page with nothing beside it, like a title."""
     if len(unit["lines"]) != 1:
         return False
-    x0, _, x1, _ = unit["lines"][0]
+    x0, y0, x1, y1 = unit["lines"][0]
+    if any(overlaps(y0, y1, o["box"][1], o["box"][3]) for o in others):
+        return False
     return abs((x0 + x1) / 2 - page_width / 2) < 12 and x0 > page_width * 0.15
 
 
-def unit_html(unit, translation, page_width):
+def split_html(html_text, visible_chars):
+    """Splits HTML after roughly `visible_chars` characters of text, at a space, keeping
+    <b>/<i> tags balanced in both halves."""
+    tokens = re.split(r"(<[^>]+>)", html_text)
+    count, open_tags, first = 0, [], []
+    for t_index, token in enumerate(tokens):
+        if token.startswith("<"):
+            name = token.strip("</>").split()[0]
+            if token.startswith("</"):
+                if name in open_tags:
+                    open_tags.remove(name)
+            elif not token.endswith("/>"):
+                open_tags.append(name)
+            first.append(token)
+            continue
+        if count + len(token) <= visible_chars:
+            count += len(token)
+            first.append(token)
+            continue
+        cut = token.rfind(" ", 0, max(0, visible_chars - count))
+        if cut < 0:
+            cut = 0
+        first.append(token[:cut])
+        rest = [f"<{n}>" for n in open_tags] + [token[cut:].lstrip()] + tokens[t_index + 1:]
+        first += [f"</{n}>" for n in reversed(open_tags)]
+        return "".join(first), "".join(rest)
+    return html_text, ""
+
+
+def drop_cap_for(unit, others):
+    """A large single letter just left of the unit's first line (a decorative drop cap)."""
+    lx0, ly0, lx1, ly1 = unit["lines"][0]
+    for o in others:
+        if len(o["text"]) == 1 and o["size"] > 2 * unit["size"] and o["box"][2] <= lx0 + 3 and overlaps(ly0, ly1, o["box"][1], o["box"][3]):
+            return o
+    return None
+
+
+def unit_html(unit, translation, centred, indent=0):
     size = unit["size"]
     family = family_for(unit["font"])
-    align = "center" if is_centred(unit, page_width) else unit["align"]
+    align = "center" if centred else unit["align"]
     body = small_caps(translation, size) if unit["font"].lower().startswith("cinzel") else translation
     return (
         f"<div style=\"font-family:{family}; font-size:{size:.2f}pt; color:{unit['color']}; "
-        f"line-height:1.18; text-align:{align}\">{body}</div>"
+        f"line-height:1.18; text-align:{align}; text-indent:{indent:.1f}pt\">{body}</div>"
     )
 
 
@@ -133,6 +198,7 @@ def replace(src, units_path, translations_path, out):
 
         # Removing text also removes links over it (e.g. clickable contents entries); keep them.
         links = page.get_links()
+        rules = rule_lines(page) if todo else []
 
         # 1. Remove only the original text of the translated units; keep images and line art.
         # Stencil text (invisible text that cuts a coloured fill into letters) is removed in a
@@ -167,16 +233,27 @@ def replace(src, units_path, translations_path, out):
             for nxt in todo[i + 1:]:
                 if nxt["id"] not in merged:
                     break
+                # The first line may start further right (an indent, or room for a drop cap).
                 indent = max(indent, u["box"][0] - nxt["box"][0])
                 u["box"] = [min(u["box"][0], nxt["box"][0]), u["box"][1], max(u["box"][2], nxt["box"][2]), max(u["box"][3], nxt["box"][3])]
                 u["lines"] = u["lines"] + nxt["lines"]
-                u["align"] = "justify"
+                if len(u["lines"]) >= 3:
+                    u["align"] = "justify"
             others = [o for o in page_units if o["id"] != u["id"] and o["id"] not in merged]
-            rect = free_box(u, others, right_margin, page.rect, is_centred(u, page.rect.width))
-            if indent:
-                translations[u["id"]] = f"<span style='padding-left:{indent:.1f}pt'></span>{translations[u['id']]}"
+            centred = is_centred(u, page.rect.width, others)
+            rect = free_box(u, others, right_margin, page.rect, centred, rules)
+            text = translations[u["id"]]
+            cap = drop_cap_for(u, others)
+            if cap:
+                # The lines beside a drop cap are narrower: fill them first, in their own box.
+                beside = pymupdf.Rect(u["lines"][0][0], rect.y0, rect.x1, cap["box"][3])
+                n_lines = max(1, round((cap["box"][3] - rect.y0) / (1.18 * u["size"])))
+                head, text = split_html(text, int(n_lines * beside.width / (0.47 * u["size"])))
+                page.insert_htmlbox(beside, unit_html(dict(u, align="justify"), head, False), css=CSS, archive=archive, scale_low=0.9)
+                rect.y0 = cap["box"][3] + 0.5 * u["size"] * 0.18
+                indent = 0
             spare, scale = page.insert_htmlbox(
-                rect, unit_html(u, translations[u["id"]], page.rect.width), css=CSS, archive=archive, scale_low=0.6
+                rect, unit_html(u, text, centred, indent), css=CSS, archive=archive, scale_low=0.6
             )
             if spare < 0 or scale < 0.9:
                 report.append(f"  {u['id']}: {'did not fit' if spare < 0 else f'shrunk to {scale:.0%}'} - {u['text'][:50]}")

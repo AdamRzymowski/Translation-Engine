@@ -17,6 +17,7 @@ Usage: python layout/extract.py <source.pdf> <first_page> <last_page> <out.json>
 """
 import html
 import json
+import re
 import sys
 
 import pymupdf
@@ -46,35 +47,71 @@ def line_html(spans):
     return "".join(parts).replace("</b><b>", "").replace("</i><i>", "")
 
 
+def split_spans(spans):
+    """Splits a leading number from the rest of a line when they are separate table cells,
+    e.g. a spell's "11+" (Casting Value column) and "Augment" (Type column), or "10" and
+    "Witchcraft" in a numbered contents entry."""
+    first = spans[0]["text"].strip()
+    if len(spans) > 1 and re.fullmatch(r"\d+\+?", first) and spans[1]["text"].strip()[:1].isalpha():
+        return [spans[:1], spans[1:]]
+    return [spans]
+
+
 def page_lines(page):
     """All non-empty text lines of a page, each with its block's box."""
     lines = []
     for block in page.get_text("dict")["blocks"]:
         if block["type"] != 0:
             continue
+        # Some justified text stores every word as its own "line"; join pieces on the same row.
+        rows = []
         for line in block["lines"]:
             spans = [s for s in line["spans"] if s["text"].strip()]
             if not spans:
                 continue
-            main = max(spans, key=lambda s: len(s["text"]))
-            lines.append({
-                "bbox": [round(v, 2) for v in line["bbox"]],
-                "block": [round(v, 2) for v in block["bbox"]],
-                "text": "".join(s["text"] for s in spans).strip(),
-                "html": line_html(spans).strip(),
-                "font": main["font"],
-                "size": round(main["size"], 2),
-                "color": f"#{main['color']:06x}",
-                "all_bold": all(is_bold(s) for s in spans),
-                # Invisible text used as a stencil over a coloured fill (e.g. purple contents entries).
-                "stencil": any(s.get("alpha", 255) == 0 for s in spans),
-            })
+            prev = rows[-1] if rows else None
+            # Word gaps are under one font size; wider gaps separate table columns ("CV", "Type").
+            if prev and abs(line["bbox"][1] - prev["y0"]) < 2 and 0 <= line["bbox"][0] - prev["x1"] < 0.9 * spans[0]["size"]:
+                spaced = [dict(spans[0], text=" " + spans[0]["text"].lstrip())] + spans[1:]
+                prev["spans"] += spaced
+                prev["x1"] = line["bbox"][2]
+            else:
+                rows.append({"spans": spans, "y0": line["bbox"][1], "x1": line["bbox"][2]})
+        for row in rows:
+            for part in split_spans(row["spans"]):
+                lines.append(make_line(part, block))
     return lines
+
+
+def make_line(spans, block):
+    main = max(spans, key=lambda s: len(s["text"]))
+    # Heights come from the baseline and font size: some symbols (e.g. the "𝛼" in Cosmology
+    # cards) come from fallback fonts with huge ascent/descent that would inflate the box.
+    return {
+        "bbox": [
+            round(min(s["bbox"][0] for s in spans), 2),
+            round(min(s["origin"][1] - 0.85 * s["size"] for s in spans), 2),
+            round(max(s["bbox"][2] for s in spans), 2),
+            round(max(s["origin"][1] + 0.27 * s["size"] for s in spans), 2),
+        ],
+        "block": [round(v, 2) for v in block["bbox"]],
+        "text": "".join(s["text"] for s in spans).strip(),
+        "html": line_html(spans).strip(),
+        "font": main["font"],
+        "size": round(main["size"], 2),
+        "color": f"#{main['color']:06x}",
+        "all_bold": all(is_bold(s) for s in spans),
+        # Invisible text used as a stencil over a coloured fill (e.g. purple contents entries).
+        "stencil": any(s.get("alpha", 255) == 0 for s in spans),
+    }
 
 
 def continues(prev, line, para_right):
     """True when `line` is the next line of the same paragraph as `prev`."""
     if line["text"].startswith(BULLETS):
+        return False
+    # Rows of the Cosmos/Chaos tables on spell cards, one per line.
+    if line["text"].startswith("[") and line["text"][1:3].strip().startswith("𝛼") and "]:" in line["text"][:6]:
         return False
     if abs(line["size"] - prev["size"]) > 1 or prev["all_bold"] != line["all_bold"] and prev["all_bold"]:
         return False
@@ -116,8 +153,8 @@ def extract(path, first, last):
             x1 = max(p["bbox"][2] for p in parts)
             y1 = max(p["bbox"][3] for p in parts)
             align = "justify" if len(parts) > 2 else "left"
-            # A short label near the right of its block (e.g. "50 pts") stays right-aligned.
-            if len(parts) == 1 and x0 > first_line["block"][0] + 0.5 * (first_line["block"][2] - first_line["block"][0]) and x1 >= first_line["block"][2] - 2 and len(first_line["text"]) < 12:
+            # Point costs (e.g. "50 pts") are right-aligned in their column.
+            if len(parts) == 1 and re.fullmatch(r"\d+\s*pts?\.?", first_line["text"]):
                 align = "right"
             out.append({
                 "id": f"p{pno + 1}-u{i}",
