@@ -14,7 +14,7 @@ export const TARGET_DIR = "Target";
 export const GLOSSARY_PATH = "Glossary.csv";
 
 // Claude model used for translation.
-export const MODEL = "claude-opus-5-5";
+export const MODEL = "claude-sonnet-5-5";
 
 // Pages sent to Claude per request. Smaller chunks keep each response well under the
 // output limit and let new glossary terms carry forward sooner.

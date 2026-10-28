@@ -47,8 +47,9 @@ no matter which batch they came from.
 
 - **TypeScript** on Node.js (chosen for now; may be revisited).
 - Known trade-off: TypeScript PDF libraries (e.g. pdf-lib) cannot easily replace existing text
-  in place, so keeping the original PDF layout will be harder than in Python. Plan output
-  around rebuilding pages from the translated text unless a better library is found.
+  in place, so keeping the original PDF layout is harder than in Python. Because layout
+  fidelity is paramount (see Output format), this is the main technical risk of the project;
+  revisit the language choice if in-place replacement proves impractical in TypeScript.
 
 ## Interface
 
@@ -61,7 +62,8 @@ no matter which batch they came from.
 
 - Translation is done with the **Claude API**, using the official Anthropic TypeScript SDK
   (`@anthropic-ai/sdk`); no raw HTTP calls.
-- Default model: `claude-opus-5-5`.
+- Model: `claude-sonnet-5-5` (chosen by the user to halve API cost; set in `src/config.ts`).
+  API usage is billed separately from the user's Claude subscription.
 - The glossary is sent with every request as the source of truth for terms, placed before the
   document text so it can be prompt-cached across files in a batch.
 - New terms the model finds are returned as structured output (term + proposed translation)
@@ -70,10 +72,20 @@ no matter which batch they came from.
 
 ## Output format
 
-- Each source PDF produces one **rebuilt PDF** containing the translated text.
-- Pages are generated fresh from the translated content (headings, paragraphs, lists, tables
-  where possible), not edited in place, so the layout will be close to but not identical to
-  the original.
+> **<u>Keeping the original graphics and layout is of paramount importance.</u>**
+> A translated PDF must look like the source: same pages, same images, artwork, icons,
+> tables, columns, fonts sizes and positions, with only the text swapped for the translation.
+> Any change that loses or rearranges graphics or layout is a regression, even if the
+> translation itself is good. When translation quality and layout fidelity pull in different
+> directions, raise it with the user rather than silently sacrificing the layout.
+
+- Each source PDF produces one translated PDF.
+- **Current state (not yet meeting the rule above):** the first version rebuilds pages fresh
+  from the translated text (headings, paragraphs, lists, tables) with pdfmake. This drops all
+  images and the original page design. It is a stopgap for checking translation quality only.
+- **Target approach:** keep the original pages and replace the text in place: find each text
+  run's position and font size (e.g. with pdf.js), cover the English text, and write the
+  Polish text into the same area, shrinking the font where Polish runs longer.
 - Output PDFs must embed a font that supports Polish characters.
 - Output files keep the source file name with the target language added
   (e.g. `Baseline/rules.pdf` → `Target/rules.Polish.pdf`).
