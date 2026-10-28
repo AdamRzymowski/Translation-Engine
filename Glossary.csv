@@ -12,8 +12,8 @@ Melee Phase,Faza walki wręcz,Game Phases & Turns,Chosen by user
 After the Game,Po grze,Game Phases & Turns,Chosen by user
 Round of Combat,Runda walki wręcz,Game Phases & Turns,
 Move Manoeuvres,Manewry ruchu,Movement & Manoeuvre Terms,
-Advance Move,Ruch marszowy,Movement & Manoeuvre Terms,"CHOOSE: alternative ""Ruch naprzód"". CLASH: same as March Move (Ruch Marszowy)"
-March Move,Ruch Marszowy,Movement & Manoeuvre Terms,CLASH: same as Advance Move (Ruch marszowy). Chosen by user
+Advance Move,Ruch naprzód,Movement & Manoeuvre Terms,Chosen by user (changed from Ruch marszowy to avoid clashing with March Move)
+March Move,Ruch Marszowy,Movement & Manoeuvre Terms,Chosen by user
 Reform Move,Manewr formowania,Movement & Manoeuvre Terms,"CHOOSE: alternative ""Przegrupowanie"". CLASH: Combat Reforms uses ""Przegrupowania"""
 Pivot,Obrót w miejscu,Movement & Manoeuvre Terms,"CHOOSE: alternative ""Zwrot"". CLASH: Post-Combat Pivots uses ""Zwroty"""
 Snaking Forward Move,Ruch wężowy,Movement & Manoeuvre Terms,Chosen by user
