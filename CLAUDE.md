@@ -122,6 +122,19 @@ when passing options, because PowerShell swallows the `--`.
   glossary terms out (structured JSON output, server-side refusal fallback enabled).
 - `src/render.ts` — builds the output PDF from translated blocks with pdfmake (Roboto font).
 
+## Next step (decided 2026-10-28, in progress)
+
+- The user approved switching the **PDF layout step to Python with PyMuPDF** (installed for the
+  user with `pip install --user pymupdf pymupdf-fonts`; a project `.venv` failed because the
+  folder path is too long for Windows).
+- Plan: (1) extract each page's text blocks with positions, fonts and sizes to JSON;
+  (2) translate the blocks (in a Claude Code session, within the plan); (3) remove only the
+  English text with redactions that keep images and line art (no fill), and write the Polish
+  text into the same boxes with `insert_htmlbox`, shrinking to fit. pymupdf-fonts has no
+  serif font, so use a Windows serif with Polish glyphs (e.g. Georgia/Cambria) for now.
+- First proof: pages 1–6 of the Arcane Compendium, reusing the Polish text already written in
+  `Target/…pages-1-6.Polish.md`, compared side by side with the original.
+
 ## Open decisions
 
 - Whether to support more than one target language (one glossary column per language).
