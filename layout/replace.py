@@ -121,7 +121,8 @@ def is_centred(unit, page_width, others=()):
     x0, y0, x1, y1 = unit["lines"][0]
     if any(overlaps(y0, y1, o["box"][1], o["box"][3]) for o in others):
         return False
-    return abs((x0 + x1) / 2 - page_width / 2) < 12 and x0 > page_width * 0.15
+    # Wide lines that merely happen to be centred (full-width text) are not titles.
+    return abs((x0 + x1) / 2 - page_width / 2) < 12 and x0 > page_width * 0.15 and x1 - x0 < 0.6 * page_width
 
 
 def split_html(html_text, visible_chars):
@@ -190,6 +191,13 @@ def replace(src, units_path, translations_path, out):
 
         # Stencil text takes its colour from the fill behind it, and removing that fill also hides
         # stencil text we did not translate (e.g. page numbers), so all of it is rewritten.
+        # Linked words drawn as shapes work the same way (their fill is removed with them).
+        if any(u.get("vector") for u in todo):
+            for u in page_units:
+                if u.get("vector") and u not in todo:
+                    translations[u["id"]] = u["html"]
+                    todo.append(u)
+            todo.sort(key=lambda u: int(u["id"].split("-u")[1]))
         if any(u.get("stencil") for u in todo):
             drawings = [d for d in page.get_drawings() if d.get("fill") and "f" in d["type"]]
             # The fill a stencil cuts is drawn far larger than the page; icons and art are not.
@@ -213,10 +221,14 @@ def replace(src, units_path, translations_path, out):
         # second pass together with the fill it shapes, as otherwise the letters stay visible.
         for stencil in (False, True):
             group = [u for u in todo if bool(u.get("stencil")) == stencil]
+            if stencil:
+                group += [u for u in todo if u.get("vector") and not u.get("stencil")]
             if not group:
                 continue
             for u in group:
-                for x0, y0, x1, y1 in u["lines"]:
+                # In the stencil pass a vector unit only needs its linked words removed.
+                areas = u["vector"] if stencil and not u.get("stencil") else u["lines"]
+                for x0, y0, x1, y1 in areas:
                     inset = (y1 - y0) * 0.2
                     page.add_redact_annot(pymupdf.Rect(x0, y0 + inset, x1, y1 - inset), fill=False)
             page.apply_redactions(
@@ -290,7 +302,7 @@ def replace(src, units_path, translations_path, out):
                 write(area, part, indent if n == 0 else 0)
 
     # Trailing pages without any text (e.g. a back cover) belong to the book too.
-    if not any(page.get_text().strip() for page in doc.pages(last, len(doc))):
+    if last < len(doc) and not any(page.get_text().strip() for page in doc.pages(last, len(doc))):
         last = len(doc)
     doc.select(list(range(first - 1, last)))
     doc.save(out, garbage=3, deflate=True)

@@ -83,6 +83,98 @@ def page_lines(page):
     return lines
 
 
+def link_titles(doc):
+    """Bookmark titles by destination (page, y), for naming links whose words are not text."""
+    titles = {}
+    for level, title, _, dest in doc.get_toc(simple=False):
+        if dest.get("kind") == 1 and "to" in dest:
+            titles.setdefault(dest["page"], []).append((dest["to"].y, title.strip()))
+    return titles
+
+
+def vector_links(page, titles):
+    """Linked words drawn as shapes, not text (the Rulebook's purple cross-references).
+
+    Their words come from the bookmark the link points to. They are returned as lines in a
+    purple bold span so they can join the sentence around them.
+    """
+    words = [pymupdf.Rect(w[:4]) for w in page.get_text("words") if any(c.isalnum() for c in w[4])]
+    fills = [d["fill"] for d in page.get_drawings() if d.get("fill") and d["rect"].width > page.rect.width]
+    colour = max(set(fills), key=fills.count) if fills else (0.51, 0.1, 0.55)
+    hexcolour = "#" + "".join(f"{round(c * 255):02x}" for c in colour)
+    out = []
+    for link in page.get_links():
+        r = link["from"]
+        if r.is_empty or any((w & r).get_area() > 0.3 * w.get_area() for w in words):
+            continue
+        if link.get("kind") == 1:
+            candidates = [(abs(y - link["to"].y), t) for y, t in titles.get(link["page"], []) if y <= link["to"].y + 5]
+            title = min(candidates)[1] if candidates else "?"
+        else:
+            title = link.get("uri", "?")
+        size = round(r.height / 1.2, 2)
+        out.append({
+            "bbox": [round(r.x0, 2), round(r.y0, 2), round(r.x1, 2), round(r.y1, 2)],
+            "block": [round(r.x0, 2), round(r.y0, 2), round(r.x1, 2), round(r.y1, 2)],
+            "text": f"⟦{title}⟧",
+            "html": f'<span style="color:{hexcolour}"><b>{html.escape(title)}</b></span>',
+            "font": "Caladea-Bold",
+            "size": size,
+            "color": "#000000",
+            "all_bold": False,
+            "stencil": False,
+            "vector": [[round(v, 2) for v in r]],
+        })
+    return out
+
+
+def join(a, b):
+    """Joins two pieces of one text row (a to the left of b) into a single line."""
+    space = "" if a["text"][-1:] in "([" or b["text"][:1] in ".,;:)" else " "
+    out = dict(a)
+    out["text"] = a["text"] + space + b["text"]
+    out["html"] = a["html"] + space + b["html"]
+    out["bbox"] = [min(a["bbox"][0], b["bbox"][0]), min(a["bbox"][1], b["bbox"][1]), max(a["bbox"][2], b["bbox"][2]), max(a["bbox"][3], b["bbox"][3])]
+    out["vector"] = a.get("vector", []) + b.get("vector", [])
+    if not a.get("vector") and not a["text"].startswith("⟦"):
+        out["size"], out["font"], out["color"] = a["size"], a["font"], a["color"]
+    else:
+        out["size"], out["font"], out["color"] = b["size"], b["font"], b["color"]
+    out["all_bold"] = False
+    return out
+
+
+def add_vector_links(lines, links):
+    """Joins each linked word to the text on its row (left and right of it), or places it on its
+    own in reading order, sized like the page's body text."""
+    sizes = sorted(l["size"] for l in lines) or [10]
+    body_size = sizes[len(sizes) // 2]
+    for link in links:
+        link = dict(link, size=body_size)
+        lx0, ly0, lx1, ly1 = link["bbox"]
+
+        def same_row(line):
+            y0, y1 = line["bbox"][1], line["bbox"][3]
+            return min(y1, ly1) - max(y0, ly0) > 0.5 * min(y1 - y0, ly1 - ly0)
+
+        left = next((l for l in lines if same_row(l) and -3 <= lx0 - l["bbox"][2] < 2.5 * body_size), None)
+        right = next((l for l in lines if same_row(l) and l is not left and -3 <= l["bbox"][0] - lx1 < 2.5 * body_size), None)
+        if left is None and right is None:
+            at = next((i for i, l in enumerate(lines) if l["bbox"][1] > ly0 + 2 and min(l["bbox"][2], lx1) > max(l["bbox"][0], lx0)), len(lines))
+            lines.insert(at, link)
+            continue
+        combined = link
+        if left is not None:
+            combined = join(left, combined)
+        if right is not None:
+            combined = join(combined, right)
+        anchor = left if left is not None else right
+        lines[lines.index(anchor)] = combined
+        if left is not None and right is not None:
+            lines.remove(right)
+    return lines
+
+
 def make_line(spans, block):
     main = max(spans, key=lambda s: len(s["text"]))
     # Heights come from the baseline and font size: some symbols (e.g. the "𝛼" in Cosmology
@@ -109,6 +201,9 @@ def make_line(spans, block):
 def continues(prev, line, para_right):
     """True when `line` is the next line of the same paragraph as `prev`."""
     if line["text"].startswith(BULLETS):
+        return False
+    # Enumerated steps such as "(b) ..." or "2. ..." start a new item.
+    if re.match(r"^\(?[a-z0-9]{1,2}[).]\s", line["text"]):
         return False
     # Rows of the Cosmos/Chaos tables on spell cards, one per line.
     if line["text"].startswith("[") and line["text"][1:3].strip().startswith("𝛼") and "]:" in line["text"][:6]:
@@ -142,10 +237,12 @@ def group(lines):
 
 def extract(path, first, last):
     doc = pymupdf.open(path)
+    titles = link_titles(doc)
     out = []
     for pno in range(first - 1, last):
         page = doc[pno]
-        for i, unit in enumerate(group(page_lines(page))):
+        lines = add_vector_links(page_lines(page), vector_links(page, titles))
+        for i, unit in enumerate(group(lines)):
             parts = unit["parts"]
             first_line = parts[0]
             x0 = min(p["bbox"][0] for p in parts)
@@ -168,6 +265,8 @@ def extract(path, first, last):
                 "color": first_line["color"],
                 "align": align,
                 "stencil": any(p["stencil"] for p in parts),
+                # Areas of linked words drawn as shapes; replace.py removes them with their fill.
+                "vector": [r for p in parts for r in p.get("vector", [])],
                 "translation": "",
             })
     return out
