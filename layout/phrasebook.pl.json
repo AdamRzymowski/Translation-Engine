@@ -76,5 +76,9 @@
  "Field Armies": "<b>Armie polowe</b>",
  "Grand Armies": "<b>Wielkie armie</b>",
  "and Field Armies": "<b>i Armie polowe</b>",
- "and Grand Armies": "<b>i Wielkie armie</b>"
+ "and Grand Armies": "<b>i Wielkie armie</b>",
+ "Two-Handed": "[[Dwuręczna]]",
+ "+1 Str, +1 AP": "+1 Str, +1 AP",
+ "Attacks": "Ataki",
+ "Terrain": "Teren"
 }

@@ -156,14 +156,15 @@ Work files live in `Target/.work/layout/`.
 - Arcane Compendium (35 pages): fully translated → `Target/AC.Polish.pdf`
   (translation files in `Target/.work/layout/`). New terms were added to `Glossary.csv` as
   "Added by translator" for the user to review.
-- Rulebook (75 pages): in progress → `Target/RB.Polish.pdf`. The source is copied to
-  `Target/.work/layout/RB.en.pdf` (short path). Translation files `rb-pNN-MM.pl.json`; pages
-  1–36 done. Rebuild and render check pages with `bash Target/.work/layout/build.sh rb <page>...`;
-  list a page's units with `python Target/.work/layout/show.py Target/.work/layout/rb-all.json <from> <to>`.
-  The Rulebook's purple cross-references are drawn as shapes, not text: extract.py names them
-  from the bookmark their link points to (shown as ⟦…⟧); check the visible words on the page
-  image and write them as `[[Polish words]]` in the translation (merge.py makes them purple).
-- Still to do: the rest of the Rulebook and Supplement 2 (108 pages) in `Baseline/`.
+- Rulebook (75 pages): translated → `Target/RB.Polish.pdf` (source copied to
+  `Target/.work/layout/RB.en.pdf`, translation files `rb-pNN-MM.pl.json`). Not translated yet:
+  the contents pages (7–8), the alphabetical index (74–75) and the PDF bookmarks, which are
+  built from linked words drawn as shapes. Rebuild with `bash Target/.work/layout/build.sh rb <page>...`;
+  list units with `python Target/.work/layout/show.py Target/.work/layout/rb-all.json <from> <to>`.
+  The purple cross-references are drawn as shapes: extract.py names them from the bookmark their
+  link points to (⟦…⟧), which is sometimes wrong — read the real words on the page image and
+  write them as `[[Polish words]]` (merge.py makes them purple).
+- Still to do: Supplement 2 (108 pages) in `Baseline/`.
 
 ## Open decisions
 
