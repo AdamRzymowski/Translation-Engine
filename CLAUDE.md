@@ -61,7 +61,16 @@ no matter which batch they came from.
   so they can be added to `Glossary.csv`, rather than parsed out of free text.
 - Never hard-code an API key; read it from the environment (`ANTHROPIC_API_KEY`).
 
+## Output format
+
+- Each source PDF produces one **rebuilt PDF** containing the translated text.
+- Pages are generated fresh from the translated content (headings, paragraphs, lists, tables
+  where possible), not edited in place, so the layout will be close to but not identical to
+  the original.
+- Output PDFs must embed a font that supports Polish characters.
+- Output files keep the source file name with the target language added
+  (e.g. `rules.pdf` → `rules.Polish.pdf`).
+
 ## Open decisions
 
-- Output format: PDFs that keep the original layout, or translated text/Word files.
 - Whether to support more than one target language (one glossary column per language).
