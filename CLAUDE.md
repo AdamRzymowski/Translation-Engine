@@ -84,12 +84,9 @@ no matter which batch they came from.
 > directions, raise it with the user rather than silently sacrificing the layout.
 
 - Each source PDF produces one translated PDF.
-- **Current state (not yet meeting the rule above):** the first version rebuilds pages fresh
-  from the translated text (headings, paragraphs, lists, tables) with pdfmake. This drops all
-  images and the original page design. It is a stopgap for checking translation quality only.
-- **Target approach:** keep the original pages and replace the text in place: find each text
-  run's position and font size (e.g. with pdf.js), cover the English text, and write the
-  Polish text into the same area, shrinking the font where Polish runs longer.
+- **Use the Python pipeline in `layout/`** (see below): it keeps the original pages and swaps
+  only the text. The older TypeScript pdfmake rebuild (`src/render.ts`) drops all graphics and
+  must not be used for output.
 - Output PDFs must embed a font that supports Polish characters.
 - Output files keep the source file name with the target language added
   (e.g. `Baseline/rules.pdf` → `Target/rules.Polish.pdf`).
@@ -122,18 +119,27 @@ when passing options, because PowerShell swallows the `--`.
   glossary terms out (structured JSON output, server-side refusal fallback enabled).
 - `src/render.ts` — builds the output PDF from translated blocks with pdfmake (Roboto font).
 
-## Next step (decided 2026-10-28, in progress)
+## Layout-preserving pipeline (Python, `layout/`)
 
-- The user approved switching the **PDF layout step to Python with PyMuPDF** (installed for the
-  user with `pip install --user pymupdf pymupdf-fonts`; a project `.venv` failed because the
-  folder path is too long for Windows).
-- Plan: (1) extract each page's text blocks with positions, fonts and sizes to JSON;
-  (2) translate the blocks (in a Claude Code session, within the plan); (3) remove only the
-  English text with redactions that keep images and line art (no fill), and write the Polish
-  text into the same boxes with `insert_htmlbox`, shrinking to fit. pymupdf-fonts has no
-  serif font, so use a Windows serif with Polish glyphs (e.g. Georgia/Cambria) for now.
-- First proof: pages 1–6 of the Arcane Compendium, reusing the Polish text already written in
-  `Target/…pages-1-6.Polish.md`, compared side by side with the original.
+The PDF layout step is in Python with PyMuPDF (`pip install --user pymupdf`; a project `.venv`
+fails because the folder path is too long for Windows). It replaces the pdfmake rebuild.
+
+1. `python layout/extract.py <src.pdf> <first> <last> <units.json>` — splits the pages into
+   translation units (paragraphs, list items, headings, labels) with line boxes, font, size,
+   colour, alignment and the text as HTML (`<b>`, `<i>`, `<sup>`).
+2. Translate: write `<translations.json>` mapping unit id → Polish HTML with the same tags.
+   Units left out stay untouched (page numbers, version labels). `"-"` merges a unit into the
+   one before it (one paragraph split across text blocks). Done in a Claude Code session.
+3. `python layout/replace.py <src.pdf> <units.json> <translations.json> <out.pdf>` — removes
+   only the translated text (images, artwork and line art kept, nothing painted over), writes
+   the Polish into the same place, using free space right/below, else shrinking; reports units
+   it had to shrink. Handles "stencil" text (invisible text clipping a coloured fill, used for
+   the purple contents entries) and restores links removed with the text.
+
+Fonts: Caladea (the book's body font) is installed on this PC; Cinzel (headings) and Caslon
+(cover) are not, so Book Antiqua stands in — installing Cinzel/Caslon would match exactly.
+Windows paths over 260 characters fail, so keep output file names short (e.g. `Target/AC_p1-6.Polish.pdf`).
+Work files live in `Target/.work/layout/`.
 
 ## Open decisions
 
