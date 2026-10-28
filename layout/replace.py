@@ -83,6 +83,12 @@ def free_box(unit, others, right_margin, page_rect, centred, rules=()):
         # Its column: nearby text starting at (about) the same left edge.
         column = [o["box"][2] for o in body if abs(o["box"][0] - x0) < 25 and abs(o["box"][1] - y0) < 120]
         x1 = max([x1] + column)
+        # In a two-column page, text may use the full width of its half of the page.
+        mid = page_rect.width / 2
+        if x1 < mid + 20:
+            x1 = max([x1] + [o["box"][2] for o in body if o["box"][0] < x0 + 5 and o["box"][2] < mid + 20 and o["box"][2] - o["box"][0] > 0.25 * page_rect.width])
+        elif x0 > mid - 20:
+            x1 = max([x1] + [o["box"][2] for o in body if o["box"][0] > mid - 20 and o["box"][2] - o["box"][0] > 0.25 * page_rect.width])
         if len(unit["lines"]) == 1 and unit["align"] != "right":
             # A single line (label, name, heading) may run on until the next text on its row.
             x1 = max(x1, right_margin)
